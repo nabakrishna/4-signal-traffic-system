@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traffic Light Control System</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="wrapper">
+
+    <!-- HEADER -->
+    <header>
+      <div class="header-left">
+        <div class="logo-icon">🚦</div>
+        <div>
+          <h1>Traffic Light Control System</h1>
+          <div class="subtitle">4-DIRECTION INTERSECTION MANAGEMENT // v3.0 // EMERGENCY MODULE READY</div>
+        </div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-pill">CYCLE <span id="cycleCount">0</span></div>
+        <div class="stat-pill">ELAPSED <span id="elapsed">00:00</span></div>
+        <div class="stat-pill">STATUS <span id="sysStatus">RUNNING</span></div>
+        <div class="emrg-pill" id="emrgPill">🟣 EMRG: OFF</div>
+      </div>
+    </header>
+
+    <!-- EMERGENCY BANNER (shows when active) -->
+    <div class="emrg-banner" id="emrgBanner">
+      <span id="emrgBannerIcon">🚨</span>
+      <span id="emrgBannerText">EMERGENCY VEHICLE ALERT</span>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls-bar">
+      <button class="ctrl-btn active" id="btnRun" onclick="toggleRun()">⏸ PAUSE</button>
+      <button class="ctrl-btn danger"              onclick="resetSystem()">↺ RESET</button>
+      <button class="ctrl-btn"                     onclick="skipPhase()">⏭ SKIP PHASE</button>
+      <div class="speed-ctrl">
+        <label>SPEED: <span id="speedLabel">1x</span></label>
+        <input type="range" id="speedSlider" min="1" max="10" value="1" oninput="setSpeed(this.value)">
+      </div>
+    </div>
+
+    <div class="main-grid">
+
+      <!-- LEFT: Intersection -->
+      <div>
+        <div class="intersection-panel">
+          <div class="panel-title">◈ Live Intersection View — 4th Light = Emergency Vehicle Indicator</div>
+
+          <div class="intersection-container" id="intersectionContainer">
+
+            <!-- ROAD SVG -->
+            <svg class="road-svg" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+              <rect x="180" y="0"   width="140" height="500" fill="#111c2a"/>
+              <rect x="0"   y="180" width="500" height="140" fill="#111c2a"/>
+              <rect x="180" y="180" width="140" height="140" fill="#16273d"/>
+              <g stroke="#2a4060" stroke-width="3" stroke-dasharray="20,20">
+                <line x1="250" y1="0"   x2="250" y2="170"/>
+                <line x1="250" y1="330" x2="250" y2="500"/>
+                <line x1="0"   y1="250" x2="170" y2="250"/>
+                <line x1="330" y1="250" x2="500" y2="250"/>
+              </g>
+              <!-- Crosswalks -->
+              <g fill="#1a3050" opacity="0.8">
+                <rect x="182" y="162" width="136" height="10"/>
+                <rect x="182" y="328" width="136" height="10"/>
+                <rect x="162" y="182" width="10"  height="136"/>
+                <rect x="328" y="182" width="10"  height="136"/>
+              </g>
+              <!-- Corner kerbs -->
+              <rect x="178" y="178" width="6" height="6" fill="#0a1520" rx="2"/>
+              <rect x="316" y="178" width="6" height="6" fill="#0a1520" rx="2"/>
+              <rect x="178" y="316" width="6" height="6" fill="#0a1520" rx="2"/>
+              <rect x="316" y="316" width="6" height="6" fill="#0a1520" rx="2"/>
+              <circle cx="250" cy="250" r="20" fill="none" stroke="#1a3a5c" stroke-width="1"/>
+              <text x="250" y="254" fill="#2a5070" font-size="14" text-anchor="middle" font-family="monospace">✛</text>
+            </svg>
+
+            <!-- NORTH SIGNAL -->
+            <div class="dir-zone north">
+              <div class="dir-label">NORTH</div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+                <!-- Traffic light with 4 bulbs -->
+                <div class="tl-housing" id="tl-north">
+                  <div class="bulb r-off" id="b-north-r"></div>
+                  <div class="bulb y-off" id="b-north-y"></div>
+                  <div class="bulb g-off" id="b-north-g"></div>
+                  <div class="bulb-divider"></div>
+                  <div class="bulb p-off" id="b-north-p" title="Emergency Vehicle Indicator"></div>
+                </div>
+                <!-- Countdown display -->
+                <div class="countdown-display cd-red" id="cd-north">
+                  <div class="cd-number cd-red-col" id="cdn-north">--</div>
+                  <div class="cd-label  cd-red-col" id="cdl-north">STOP</div>
+                </div>
+              </div>
+              <div class="phase-badge red" id="badge-north">RED</div>
+            </div>
+
+            <!-- SOUTH SIGNAL -->
+            <div class="dir-zone south">
+              <div class="phase-badge red" id="badge-south">RED</div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+                <div class="countdown-display cd-red" id="cd-south">
+                  <div class="cd-number cd-red-col" id="cdn-south">--</div>
+                  <div class="cd-label  cd-red-col" id="cdl-south">STOP</div>
+                </div>
+                <div class="tl-housing" id="tl-south">
+                  <div class="bulb r-off" id="b-south-r"></div>
+                  <div class="bulb y-off" id="b-south-y"></div>
+                  <div class="bulb g-off" id="b-south-g"></div>
+                  <div class="bulb-divider"></div>
+                  <div class="bulb p-off" id="b-south-p"></div>
+                </div>
+              </div>
+              <div class="dir-label">SOUTH</div>
+            </div>
+
+            <!-- WEST SIGNAL -->
+            <div class="dir-zone west">
+              <div class="dir-label">W</div>
+              <div style="display:flex;flex-direction:row;align-items:center;gap:4px">
+                <div class="tl-housing horizontal" id="tl-west">
+                  <div class="bulb r-off" id="b-west-r"></div>
+                  <div class="bulb y-off" id="b-west-y"></div>
+                  <div class="bulb g-off" id="b-west-g"></div>
+                  <div class="bulb-divider"></div>
+                  <div class="bulb p-off" id="b-west-p"></div>
+                </div>
+                <div class="countdown-display cd-red" id="cd-west">
+                  <div class="cd-number cd-red-col" id="cdn-west">--</div>
+                  <div class="cd-label  cd-red-col" id="cdl-west">STOP</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- EAST SIGNAL -->
+            <div class="dir-zone east">
+              <div style="display:flex;flex-direction:row;align-items:center;gap:4px">
+                <div class="countdown-display cd-red" id="cd-east">
+                  <div class="cd-number cd-red-col" id="cdn-east">--</div>
+                  <div class="cd-label  cd-red-col" id="cdl-east">STOP</div>
+                </div>
+                <div class="tl-housing horizontal" id="tl-east">
+                  <div class="bulb r-off" id="b-east-r"></div>
+                  <div class="bulb y-off" id="b-east-y"></div>
+                  <div class="bulb g-off" id="b-east-g"></div>
+                  <div class="bulb-divider"></div>
+                  <div class="bulb p-off" id="b-east-p"></div>
+                </div>
+              </div>
+              <div class="dir-label">E</div>
+            </div>
+
+            <!-- CENTER RING -->
+            <div class="timer-ring-wrap">
+              <svg width="140" height="140" viewBox="0 0 140 140">
+                <circle class="ring-bg" cx="70" cy="70" r="55"/>
+                <circle class="ring-fill" id="ringFill" cx="70" cy="70" r="55"
+                  stroke-dasharray="345.4" stroke-dashoffset="0" stroke="#00ff7f"/>
+              </svg>
+              <div class="center-info">
+                <div class="center-time"  id="centerTime">--</div>
+                <div class="center-cycle" id="centerCycle">CYCLE 0</div>
+              </div>
+            </div>
+
+          </div><!-- /intersection-container -->
+
+          <!-- PURPLE LIGHT LEGEND -->
+          <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px">
+            <div style="display:flex;align-items:center;gap:6px;font-size:0.6rem;color:var(--muted);font-family:'Share Tech Mono',monospace">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--dim-purple);border:1px solid #2a1a3a;"></div>OFF — No emergency
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:0.6rem;color:var(--purple-alert);font-family:'Share Tech Mono',monospace">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--purple-alert);box-shadow:var(--glow-pa);"></div>DARK PURPLE — System alert (possible EV)
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:0.6rem;color:var(--purple-confirm);font-family:'Share Tech Mono',monospace">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--purple-confirm);box-shadow:var(--glow-p);"></div>BRIGHT PURPLE — EV confirmed arriving
+            </div>
+          </div>
+
+          <!-- TIMELINE -->
+          <div class="timeline-section">
+            <div class="panel-title" style="margin-top:16px">◈ Phase Timeline</div>
+            <div class="timeline-grid" id="timelineGrid"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RIGHT: Sidebar -->
+      <div class="sidebar">
+
+        <!-- Direction cards -->
+        <div class="info-panel">
+          <div class="panel-title">◈ Direction Status</div>
+          <div class="dir-cards" id="dirCards"></div>
+        </div>
+
+        <!-- EMERGENCY PANEL -->
+        <div class="emrg-panel" id="emrgPanel">
+          <div class="panel-title">◈ Emergency Vehicle Module</div>
+
+          <div class="emrg-status-row">
+            <div class="emrg-big-light el-off" id="emrgBigLight"></div>
+            <div class="emrg-info">
+              <h3 id="emrgTitle">NO EMERGENCY</h3>
+              <p id="emrgDesc">System standing by. Waiting for input from external source.</p>
+            </div>
+          </div>
+
+          <div class="emrg-state-label" id="emrgStateLabel">STATE: OFF</div>
+
+          <!-- Manual test controls (will be replaced by system feed later) -->
+          <div class="emrg-btns">
+            <button class="emrg-btn eb-off selected" id="ebOff" onclick="setEmergency('off')">
+              <div class="eb-dot" style="background:var(--dim-purple);border:1px solid #2a1a3a"></div>
+              OFF — No emergency vehicle
+            </button>
+            <button class="emrg-btn eb-alert" id="ebAlert" onclick="setEmergency('alert')">
+              <div class="eb-dot" style="background:var(--purple-alert)"></div>
+              ALERT — System warning received
+            </button>
+            <button class="emrg-btn eb-confirm" id="ebConfirm" onclick="setEmergency('confirm')">
+              <div class="eb-dot" style="background:var(--purple-confirm)"></div>
+              CONFIRMED — EV arriving now
+            </button>
+          </div>
+
+          <div class="emrg-note" id="emrgNote">
+            🔌 These buttons simulate the external system feed.<br>
+            Later, the incoming signal from your system will automatically trigger ALERT or CONFIRMED state and update all 4 signal lights.
+          </div>
+        </div>
+
+        <!-- Timing editor -->
+        <div class="info-panel">
+          <div class="panel-title">◈ Timing Configuration</div>
+
+          <div class="section-selector">
+            <button class="dir-sel-btn sel" onclick="selectEditDir('NS',event)">N/S</button>
+            <button class="dir-sel-btn"     onclick="selectEditDir('EW',event)">E/W</button>
+          </div>
+
+          <div class="edit-grid">
+            <div class="edit-item">
+              <label style="color:#00ff7f88">● GREEN (s)</label>
+              <input type="number" id="editGreen"  min="5" max="200" value="30" oninput="previewTiming()">
+            </div>
+            <div class="edit-item">
+              <label style="color:#ffcc0088">● YELLOW (s)</label>
+              <input type="number" id="editYellow" min="2" max="20"  value="5"  oninput="previewTiming()">
+            </div>
+            <div class="edit-item" style="grid-column:1/-1">
+              <label style="color:#4a7090">● CLEARANCE GAP (s) <span style="font-size:0.5rem;opacity:0.6">— extra all-red buffer after yellow</span></label>
+              <input type="number" id="editClear" min="0" max="10" value="0" oninput="previewTiming()">
+            </div>
+            <div class="edit-item" style="grid-column:1/-1">
+              <label style="color:#ff304066">● RED (s) — auto: opposite side G + Y + clearance</label>
+              <input type="number" id="editRed" disabled
+                style="opacity:0.5;cursor:not-allowed;background:rgba(255,48,64,0.05);border-color:#ff304033;color:#ff3040;">
+            </div>
+          </div>
+
+          <!-- Live preview bar -->
+          <div style="margin-top:8px;padding:8px;background:rgba(0,0,0,0.3);border-radius:6px;border:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+              <span style="font-size:0.58rem;font-family:'Share Tech Mono',monospace;color:var(--muted);letter-spacing:1px;">FULL CYCLE PREVIEW</span>
+              <span style="font-size:0.8rem;font-family:'Share Tech Mono',monospace;color:var(--accent);font-weight:700;" id="cycleTotal">--s</span>
+            </div>
+            <div style="height:12px;border-radius:4px;overflow:hidden;display:flex;gap:1px;" id="previewBar">
+              <div id="pvG"  style="background:rgba(0,255,127,0.45);transition:width 0.2s;display:flex;align-items:center;justify-content:center;font-size:0.4rem;color:#00ff7f;font-family:monospace;overflow:hidden;" ></div>
+              <div id="pvY"  style="background:rgba(255,204,0,0.45);transition:width 0.2s;display:flex;align-items:center;justify-content:center;font-size:0.4rem;color:#ffcc00;font-family:monospace;overflow:hidden;"></div>
+              <div id="pvC"  style="background:rgba(100,100,100,0.3);transition:width 0.2s;min-width:0;"></div>
+              <div id="pvRed"style="background:rgba(255,48,64,0.25);transition:width 0.2s;display:flex;align-items:center;justify-content:center;font-size:0.4rem;color:#ff3040;font-family:monospace;overflow:hidden;"></div>
+              <div id="pvEWG"style="background:rgba(0,255,127,0.25);transition:width 0.2s;display:flex;align-items:center;justify-content:center;font-size:0.4rem;color:#00ff7f88;font-family:monospace;overflow:hidden;"></div>
+              <div id="pvEWY"style="background:rgba(255,204,0,0.25);transition:width 0.2s;display:flex;align-items:center;justify-content:center;font-size:0.4rem;color:#ffcc0088;font-family:monospace;overflow:hidden;"></div>
+              <div id="pvEWC"style="background:rgba(100,100,100,0.2);transition:width 0.2s;min-width:0;"></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+              <span style="font-size:0.46rem;font-family:'Share Tech Mono',monospace;color:#00ff7f88;" id="pvGlbl"></span>
+              <span style="font-size:0.46rem;font-family:'Share Tech Mono',monospace;color:#ffcc0088;" id="pvYlbl"></span>
+              <span style="font-size:0.46rem;font-family:'Share Tech Mono',monospace;color:#ff304088;" id="pvRlbl"></span>
+            </div>
+          </div>
+
+          <button class="apply-btn" onclick="applyTiming()">✓ Apply Timing</button>
+        </div>
+
+        <!-- Log -->
+        <div class="info-panel">
+          <div class="panel-title">◈ Event Log</div>
+          <div class="cycle-log" id="cycleLog">
+            <div class="log-entry"><span class="log-time">00:00</span><span>System initialized</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
