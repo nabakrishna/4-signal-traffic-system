@@ -4,11 +4,12 @@
 # ├── images/
 # ├── models/
 # │   ├── best.onnx
-# │   └── best.pt          ← pretrained model
+# │   ├── best.pt
+# │   └── yolov11l          ←  model
 # ├── sample_video/
 # │   └── 120678-721759752_medium.mp4  ← your video
   ├──  detection.py       ← detection code
-# └── main.py             ← THIS FILE (run from here)
+# └── main.py             ← run from here
 # ============================================================
 
 
@@ -60,6 +61,7 @@ VEHICLE COUNT + TYPE + AMBULANCE
               ├── Holiday check
               ├── Weather API
               └── Special events
+
 
 
 
