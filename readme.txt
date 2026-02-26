@@ -7,7 +7,8 @@
 # │   └── best.pt          ← pretrained model
 # ├── sample_video/
 # │   └── 120678-721759752_medium.mp4  ← your video
-# └── main.py         ← THIS FILE (run from here)
+  ├──  detection.py       ← detection code
+# └── main.py             ← THIS FILE (run from here)
 # ============================================================
 
 
@@ -59,5 +60,6 @@ VEHICLE COUNT + TYPE + AMBULANCE
               ├── Holiday check
               ├── Weather API
               └── Special events
+
 
 
