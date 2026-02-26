@@ -1,5 +1,5 @@
 # ============================================================
-# FOLDER STRUCTURE (Your Project)
+# FOLDER STRUCTURE
 # TRAFIC/
 # ├── images/
 # ├── models/
@@ -7,7 +7,7 @@
 # │   └── best.pt          ← pretrained model
 # ├── sample_video/
 # │   └── 120678-721759752_medium.mp4  ← your video
-# └── detection.py         ← THIS FILE (run from here)
+# └── main.py         ← THIS FILE (run from here)
 # ============================================================
 
 
@@ -59,4 +59,5 @@ VEHICLE COUNT + TYPE + AMBULANCE
               ├── Holiday check
               ├── Weather API
               └── Special events
+
 
