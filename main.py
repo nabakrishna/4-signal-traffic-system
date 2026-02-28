@@ -4,7 +4,7 @@ from ultralytics import YOLO
 from collections import defaultdict
 
 # loadin the modellll
-model = YOLO('models/yolo11l.pt')
+model = YOLO('models/yolo11l.pt')#changing th emodel to yolo26l 
 model.to('cuda') 
 class_list = model.names
 
@@ -56,7 +56,7 @@ COLOR_MAP = {
 }
 
 # speed: skip frames
-SKIP         = 1
+SKIP         = 2
 frame_count  = 0
 last_results = None
 prev_time    = time.time()
@@ -122,13 +122,6 @@ while cap.isOpened():
                 crossed_ids.add(track_id)
                 class_counts[class_name] += 1
             
-            # FIX — only count when vehicle is MOVING DOWNWARD across line
-            # if (cy > line_y_red and
-            #     cy < line_y_red + 40 and        # ← must be close to line (not already past)
-            #     track_id not in crossed_ids and
-            #     LINE_START_X < cx < LINE_END_X):
-            #     crossed_ids.add(track_id)
-            #     class_counts[class_name] += 1
 
     # ── Dashboard (top left) ──
     total   = sum(class_counts.values())
